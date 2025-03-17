@@ -43,20 +43,20 @@ var market_events = [
 	{"name": "Celebrity Overdose", "drug": "", "message": "A celebrity OD'd on DRUG_NAME. The drug is trending!", "effect": 150}
 ]
 
-# Current location
-var current_location = ""
+# Reference to the main game
+var main_game
 
 # Initialize with base values
 func _ready():
+	# Get reference to main game
+	main_game = get_parent()
+	
 	# Initialize current prices with base values
 	for drug_name in base_drug_prices:
 		current_prices[drug_name] = base_drug_prices[drug_name]
 
 # Update market prices based on location
 func update_market_prices(location):
-	# Store current location
-	current_location = location
-	
 	# 10% chance of a market event
 	var event_chance = randf()
 	var event_triggered = false
@@ -162,3 +162,9 @@ func reset_prices():
 		current_prices[drug_name] = base_drug_prices[drug_name]
 	
 	emit_signal("market_updated", current_prices)
+
+# Get current location
+func get_current_location():
+	if main_game and is_instance_valid(main_game) and main_game.has_node("LocationSystem"):
+		return main_game.get_node("LocationSystem").current_location
+	return ""

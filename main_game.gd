@@ -61,13 +61,6 @@ var medical_supplies = {
 }
 
 #==============================================================================
-# Location System
-#==============================================================================
-
-# Current location
-var current_location = ""
-
-#==============================================================================
 # UI DIALOGS & REFERENCES
 #==============================================================================
 
@@ -144,6 +137,16 @@ func _ready():
 	# Wait a frame to ensure all nodes are ready
 	await get_tree().process_frame
 	
+		# Create location system
+	var location_system = Node.new()
+	location_system.set_script(load("res://location_system.gd"))
+	location_system.name = "LocationSystem"
+	add_child(location_system)
+
+	# Connect to the location system's signals
+	$LocationSystem.location_changed.connect(_on_location_changed)
+	$LocationSystem.travel_completed.connect(_on_travel_completed)
+	
 	# Create inventory system
 	var inventory_system = Node.new()
 	inventory_system.name = "InventorySystem"
@@ -167,6 +170,8 @@ func _ready():
 	setup_loan_shark_dialog()
 	setup_cellphone()
 	setup_time_system()
+	setup_combat_system()
+	
 	# Connect bank button
 	if has_node("MainContainer/BottomSection/ActionButtons/GridContainer/BankButton"):
 		$MainContainer/BottomSection/ActionButtons/GridContainer/BankButton.pressed.connect(show_bank_dialog)
@@ -207,14 +212,6 @@ func _ready():
 	
 	# Initialize the lists with proper sizing
 	initialize_lists()
-	
-	# Connect location button signals
-	$MainContainer/TopSection/StatsContainer/LocationContainer/LocationButtons/Erie.pressed.connect(func(): change_location("Erie"))
-	$MainContainer/TopSection/StatsContainer/LocationContainer/LocationButtons/York.pressed.connect(func(): change_location("York"))
-	$MainContainer/TopSection/StatsContainer/LocationContainer/LocationButtons/Kensington.pressed.connect(func(): change_location("Kensington"))
-	$MainContainer/TopSection/StatsContainer/LocationContainer/LocationButtons/Pittsburgh.pressed.connect(func(): change_location("Pittsburgh"))
-	$MainContainer/TopSection/StatsContainer/LocationContainer/LocationButtons/LovePark.pressed.connect(func(): change_location("Love Park"))
-	$MainContainer/TopSection/StatsContainer/LocationContainer/LocationButtons/Reading.pressed.connect(func(): change_location("Reading"))
 	
 	# Connect CellphoneButton
 	if has_node("MainContainer/BottomSection/ActionButtons/GridContainer/CellphoneButton"):
@@ -269,7 +266,7 @@ func _direct_save_no_wait():
 			"equipped_weapon": equipped_weapon,
 			"medical_supplies": {}  # Will fill separately
 		},
-		"location": current_location,
+		"location": $LocationSystem.current_location,
 		"time": {
 			"game_hour": int(game_hour),
 			"game_day": int(game_day)
@@ -383,7 +380,7 @@ func update_stats_display():
 func update_market_display():
 	market_list.clear()
 	
-	if current_location.is_empty():
+	if $LocationSystem.current_location.is_empty():
 		return
 	
 	# Get current prices from MarketSystem
@@ -409,52 +406,6 @@ func initialize_lists():
 	inventory_list.size = Vector2(inventory_container.size.x, 200)
 	
 	update_market_display()
-
-# Updates drug prices and handles events when changing location
-func change_location(location):
-	# Time passes when changing locations (1-2 hours)
-	var hours_passed = 1 + randi() % 2
-	advance_time(hours_passed)
-
-	# Show time passage message
-	show_message("Traveling took " + str(hours_passed) + " hours")
-
-	# Update current location
-	current_location = location
-	location_label.text = "Currently In: " + location
-
-	# Update prices when changing location
-	$MarketSystem.update_market_prices(location)
-
-	# Mark that we have unsaved changes
-	has_unsaved_changes = true
-
-	# Check for NON-HARMFUL events only
-	if event_system:
-		event_system.check_for_travel_event(location)
-	
-	# Keep the combat chance calculation, but we'll modify it to be less harmful
-	var combat_chance = 0.1  # Base 10% chance
-
-	if location in ["York", "Pittsburgh"]:
-		combat_chance = 0.25  # 25% chance
-	elif location in ["Kensington"]:
-		combat_chance = 0.2  # 20% chance
-
-	# Log to event history
-	var events_container = get_node_or_null("EventsContainer")
-	if events_container and events_container.has_method("add_custom_event"):
-		events_container.add_custom_event("Location Change", 
-			"You traveled to " + location + ".",
-			{"time": hours_passed})
-
-	# Roll for ambush
-	var roll = randf()
-	
-	if roll < combat_chance:
-		# Re-enable these lines to trigger combat:
-		await get_tree().create_timer(1.0).timeout
-		start_combat()
 
 #==============================================================================
 # BUYING/SELLING SYSTEM
@@ -1464,10 +1415,10 @@ func show_police_info():
 	message += "- High: York, Pittsburgh\n"
 	message += "- Medium: Erie, Kensington\n"
 	message += "- Low: Love Park, Reading\n"
-	message += "\nCurrent location: " + current_location
+	message += "\nCurrent location: " + $LocationSystem.current_location
 	
 	cellphone_instance.update_message(message)
-	show_message("Police are active in " + current_location)
+	show_message("Police are active in " + $LocationSystem.current_location)
 
 #==============================================================================
 # WEAPONS AND GUN DEALER SYSTEM
@@ -2194,291 +2145,6 @@ func use_weapon():
 	return 0
 
 #==============================================================================
-# COMBAT SYSTEM
-#==============================================================================
-
-# Function to setup combat dialog
-func setup_combat_dialog():
-	combat_dialog = PopupPanel.new()
-	combat_dialog.title = "Combat"
-	add_child(combat_dialog)
-	
-	var vbox = VBoxContainer.new()
-	vbox.custom_minimum_size = Vector2(400, 300)  # Made taller for better readability
-	combat_dialog.add_child(vbox)
-	
-	# Enemy info
-	var enemy_info = Label.new()
-	enemy_info.name = "EnemyInfo"
-	enemy_info.text = "Enemy info will appear here"
-	enemy_info.add_theme_font_size_override("font_size", 16)
-	vbox.add_child(enemy_info)
-	
-	# Spacer
-	var spacer1 = Control.new()
-	spacer1.custom_minimum_size = Vector2(0, 10)
-	vbox.add_child(spacer1)
-	
-	# Player info
-	var player_info = Label.new()
-	player_info.name = "PlayerInfo"
-	player_info.text = "Player info will appear here"
-	player_info.add_theme_font_size_override("font_size", 16)
-	vbox.add_child(player_info)
-	
-	# Spacer
-	var spacer2 = Control.new()
-	spacer2.custom_minimum_size = Vector2(0, 10)
-	vbox.add_child(spacer2)
-	
-	# Combat status
-	var combat_status = Label.new()
-	combat_status.name = "CombatStatus"
-	combat_status.text = "Combat started!"
-	combat_status.add_theme_font_size_override("font_size", 14)
-	combat_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(combat_status)
-	
-	# Spacer
-	var spacer3 = Control.new()
-	spacer3.custom_minimum_size = Vector2(0, 20)
-	vbox.add_child(spacer3)
-	
-	# Buttons
-	var button_container = HBoxContainer.new()
-	button_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_child(button_container)
-	
-	var attack_button = Button.new()
-	attack_button.text = "Attack"
-	attack_button.custom_minimum_size = Vector2(100, 40)
-	attack_button.pressed.connect(func(): player_attack())
-	button_container.add_child(attack_button)
-	
-	var spacer_buttons = Control.new()
-	spacer_buttons.custom_minimum_size = Vector2(20, 0)
-	button_container.add_child(spacer_buttons)
-	
-	var run_button = Button.new()
-	run_button.text = "Run"
-	run_button.custom_minimum_size = Vector2(100, 40)
-	run_button.pressed.connect(func(): attempt_run())
-	button_container.add_child(run_button)
-
-# Fixed start_combat function
-func start_combat():
-	# Only start combat if not already in combat
-	if in_combat:
-		return
-	
-	print("Starting combat...")
-	
-	# Setup combat dialog if it doesn't exist
-	if not is_instance_valid(combat_dialog):
-		setup_combat_dialog()
-		# Need to wait for dialog to be set up
-		await get_tree().process_frame
-	
-	in_combat = true
-	
-	# Choose enemy based on location
-	var enemies = {
-		"Erie": {"name": "Street Thug", "health": 30, "damage": 5},
-		"York": {"name": "Gang Member", "health": 50, "damage": 10},
-		"Kensington": {"name": "Drug Dealer", "health": 40, "damage": 8},
-		"Pittsburgh": {"name": "Mobster", "health": 60, "damage": 15},  # Increased damage
-		"Love Park": {"name": "Corrupt Cop", "health": 70, "damage": 15},
-		"Reading": {"name": "Junkie", "health": 20, "damage": 3}
-	}
-	
-	# Default to Erie enemy if current location not found
-	var location_enemies = enemies["Erie"]
-	if enemies.has(current_location):
-		location_enemies = enemies[current_location]
-	
-	# Set enemy stats
-	enemy_name = location_enemies.name
-	enemy_health = location_enemies.health
-	enemy_initial_health = location_enemies.health  # Store initial health
-	enemy_damage = location_enemies.damage
-	
-	print("Enemy initialized: " + enemy_name + " with " + str(enemy_health) + " health and " + str(enemy_damage) + " damage")
-	
-	# Update combat dialog
-	update_combat_dialog()
-	
-	# Show dialog
-	combat_dialog.popup_centered()
-	
-	# Add a slight delay before the first enemy attack
-	await get_tree().create_timer(0.5).timeout
-	
-	# Enemy gets the first attack in an ambush
-	enemy_attack()
-	
-	var events_container = get_node_or_null("EventsContainer")
-	if events_container and events_container.has_method("add_custom_event"):
-		events_container.add_custom_event("Combat Started", 
-		"You were ambushed by a " + enemy_name + " in " + current_location + "!",
-		{"health": 0})
-
-# Modified enemy attack for faster damage
-func enemy_attack():
-	if not in_combat:
-		return
-	
-	# Calculate damage with a slight variation
-	var damage_taken = int(enemy_damage * randf_range(0.8, 1.2))
-	
-	# Apply damage to player
-	health -= damage_taken
-	
-	# Update combat status
-	var combat_status = combat_dialog.get_child(0).get_node("CombatStatus")
-	combat_status.text = enemy_name + " attacks you for " + str(damage_taken) + " damage!"
-	
-	# Update UI
-	update_stats_display()
-	update_combat_dialog()
-	
-	# For testing purposes: make death happen faster when health is low
-	if health < 30:
-		damage_taken = int(enemy_damage * 2.5)  # Extra damage when low health
-		health -= damage_taken
-		combat_status.text += "\n" + enemy_name + " lands a critical hit for " + str(damage_taken) + " additional damage!"
-	
-	# Check if player is defeated - immediately end combat if so
-	if health <= 0:
-		# Add defeated message
-		combat_status.text += "\nYou have been defeated!"
-		
-		# Give the player time to read the message before ending combat
-		await get_tree().create_timer(1.5).timeout
-		end_combat(false)
-
-# Function to update combat dialog
-func update_combat_dialog():
-	if not is_instance_valid(combat_dialog):
-		return
-	
-	var vbox = combat_dialog.get_child(0)
-	
-	# Update enemy info
-	var enemy_info = vbox.get_node("EnemyInfo")
-	enemy_info.text = enemy_name + "\nHealth: " + str(enemy_health)
-	
-	# Update player info
-	var player_info = vbox.get_node("PlayerInfo")
-	var weapon_info = ""
-	if equipped_weapon != "":
-		weapon_info = "\nEquipped: " + equipped_weapon
-		if owned_weapons.has(equipped_weapon):
-			weapon_info += " (" + str(int(owned_weapons[equipped_weapon].durability)) + "% durability)"
-	
-	player_info.text = "You\nHealth: " + str(health) + weapon_info
-
-# Function for player attack
-func player_attack():
-	if not in_combat:
-		return
-	
-	var damage_dealt = 5  # Base damage without weapon
-	
-	# Add weapon damage if equipped
-	var weapon_damage = use_weapon()
-	damage_dealt += weapon_damage
-	
-	# Apply damage to enemy
-	enemy_health -= round(damage_dealt)
-	
-	# Update combat status
-	var combat_status = combat_dialog.get_child(0).get_node("CombatStatus")
-	
-	if weapon_damage > 0:
-		combat_status.text = "You attack with your " + equipped_weapon + " for " + str(damage_dealt) + " damage!"
-	else:
-		combat_status.text = "You attack with your fists for " + str(damage_dealt) + " damage!"
-	
-	# Check if enemy is defeated
-	if enemy_health <= 0:
-		end_combat(true)
-		return
-	
-	# Enemy attacks back
-	await get_tree().create_timer(1.0).timeout
-	enemy_attack()
-
-# Function to attempt running from combat
-func attempt_run():
-	# 50% chance to escape
-	if randf() < 0.5:
-		var combat_status = combat_dialog.get_child(0).get_node("CombatStatus")
-		combat_status.text = "You successfully escaped!"
-		
-		await get_tree().create_timer(1.0).timeout
-		end_combat(false)
-	else:
-		var combat_status = combat_dialog.get_child(0).get_node("CombatStatus")
-		combat_status.text = "Failed to escape!"
-		
-		# Enemy gets a free attack
-		await get_tree().create_timer(1.0).timeout
-		enemy_attack()
-
-# Function to end combat
-func end_combat(victory):
-	# Clear combat flag
-	in_combat = false
-
-	# Close combat dialog first to prevent UI issues
-	combat_dialog.hide()
-	
-	var events_container = get_node_or_null("EventsContainer")
-	if events_container and events_container.has_method("add_custom_event"):
-		if victory:
-			var cash_reward = int(enemy_initial_health * 10 * (1 + randf()))
-			events_container.add_custom_event("Combat Victory", 
-				"You defeated the " + enemy_name + " and found $" + str(cash_reward) + "!",
-				{"cash": cash_reward})
-		else:
-			if health <= 0:
-				events_container.add_custom_event("Combat Defeat", 
-					"You were defeated by the " + enemy_name + ".",
-					{"health": -health})  # Negative of current health to show how much was lost
-			else:
-				var cash_lost = int(cash * 0.3)
-				events_container.add_custom_event("Escaped Combat", 
-					"You managed to escape from the " + enemy_name + " but lost $" + str(cash_lost) + ".",
-					{"cash": -cash_lost})
-
-			# Penalty for running away
-			var cash_lost = int(cash * 0.3)
-			cash -= cash_lost
-			
-			# Lose some drugs
-			var drugs_data = get_drugs()
-			var drugs_to_remove = []
-			for drug_name in drugs_data:
-				if drugs_data[drug_name]["qty"] > 0:
-					drugs_to_remove.append(drug_name)
-
-			if drugs_to_remove.size() > 0:
-				var random_drug = drugs_to_remove[randi() % drugs_to_remove.size()]
-				var lost_amount = int(drugs_data[random_drug]["qty"] * 0.5)
-				$InventorySystem.remove_drug(random_drug, lost_amount)
-				
-				show_message("You lost $" + str(cash_lost) + " and " + str(lost_amount) + " " + random_drug)
-			else:
-				show_message("You lost $" + str(cash_lost))
-			
-			# Reset health to minimum if it's low
-			if health < 10:
-				health = 10
-
-			update_stats_display()
-			$InventorySystem.update_inventory_display()
-
-#==============================================================================
 # EVENT SYSTEM
 #==============================================================================
 
@@ -2631,8 +2297,8 @@ func new_game():
 	$InventorySystem.current_capacity = 0
 
 	# Set starting location
-	current_location = "Kensington"
-	location_label.text = "Currently In:  " + current_location
+	$LocationSystem.set_initial_location("Kensington")
+	location_label.text = "Currently In:  " + $LocationSystem.current_location
 	medical_supplies = {
 		"Bandages": {"price": 50, "qty": 0, "health_restore": 15}
 	}
@@ -2642,11 +2308,11 @@ func new_game():
 	if events_container and events_container.has_method("clear_events"):
 		events_container.clear_events()
 		events_container.add_custom_event("New Game Started", 
-			"Welcome to In The Streets! You start in " + current_location + " with $" + str(cash) + ".",
+			"Welcome to In The Streets! You start in " + $LocationSystem.current_location + " with $" + str(cash) + ".",
 			{"cash": cash})
 	
 	# Show welcome message
-	show_message("Welcome to " + current_location)
+	show_message("Welcome to " + $LocationSystem.current_location)
 
 	# Update all UI elements
 	update_stats_display()
@@ -2790,7 +2456,7 @@ func save_game(show_dialog = true):
 			"equipped_weapon": equipped_weapon,
 			"medical_supplies": {}  # Will fill this separately
 		},
-		"location": current_location,
+		"location": $LocationSystem.current_location,
 		"time": {
 			"game_hour": int(game_hour),
 			"game_day": int(game_day)
@@ -2868,7 +2534,7 @@ func _on_save_dialog_file_selected(path):
 			"equipped_weapon": equipped_weapon,
 			"medical_supplies": {}  # Will fill separately
 		},
-		"location": current_location,
+		"location": $LocationSystem.current_location,
 		"time": {
 			"game_hour": int(game_hour),
 			"game_day": int(game_day)
@@ -3005,8 +2671,7 @@ func load_game_from_path(path):
 	
 	# Load location
 	if save_data.has("location"):
-		current_location = save_data["location"]
-		location_label.text = "Currently In: " + current_location
+		$LocationSystem.set_initial_location(save_data["location"])
 	
 	# Load time data
 	if save_data.has("time"):
@@ -3179,7 +2844,7 @@ func process_daily_events():
 	
 	# Random market events
 	if randf() < 0.3:  # 30% chance
-		$MarketSystem.update_market_prices(current_location)
+		$MarketSystem.update_market_prices($LocationSystem.current_location)
 		update_market_display()
 		show_message("Market prices have changed with the new day")
 	
@@ -3206,7 +2871,7 @@ func apply_time_of_day_effects():
 			market_list.add_item(["MARKET CLOSED", "COME BACK LATER"])
 	else:
 		# Market is open, ensure prices are displayed
-		if current_location != "" and (market_list.get_child_count() <= 0 or market_list.rows.size() <= 1):
+		if $LocationSystem.current_location != "" and (market_list.get_child_count() <= 0 or market_list.rows.size() <= 1):
 			update_market_display()
 
 # Add this helper function to advance time by a specific number of hours
@@ -3330,3 +2995,87 @@ func _on_market_updated(drug_prices):
 func _on_market_event_triggered(event_data):
 	# Show event notification
 	show_message(event_data.message)
+
+
+
+#######################################################
+# COMBAT SYSTEM
+#######################################################
+
+func setup_combat_system():
+	# Create combat system
+	var combat_system = Node.new()
+	combat_system.set_script(load("res://Scripts/Combat/combat_system.gd"))
+	combat_system.name = "CombatSystem"
+	add_child(combat_system)
+
+	# Connect to the combat system's signals
+	combat_system.connect("combat_started", Callable(self, "_on_combat_started"))
+	combat_system.connect("combat_ended", Callable(self, "_on_combat_ended"))
+	combat_system.connect("player_damaged", Callable(self, "_on_player_damaged"))
+	combat_system.connect("enemy_damaged", Callable(self, "_on_enemy_damaged"))
+	
+	
+	
+func _on_combat_started(enemy_data):
+	# Handle combat start event
+	show_message("Combat started with " + enemy_data.name + "!")
+	has_unsaved_changes = true
+
+func _on_combat_ended(victory):
+	# Handle combat end event
+	if victory:
+		show_message("You won the fight!")
+	else:
+		if health <= 0:
+			show_message("You were defeated...")
+		else:
+			show_message("You escaped from the fight")
+
+func _on_player_damaged(amount):
+	# Handle player taking damage
+	show_message("You took " + str(amount) + " damage!")
+
+func _on_enemy_damaged(amount):
+	# Handle enemy taking damage
+	show_message("You dealt " + str(amount) + " damage!")
+
+
+
+
+
+#######################################################
+# LOCATION SYSTEM
+#######################################################
+
+func _on_location_changed(new_location):
+	# Market updates when changing location
+	$MarketSystem.update_market_prices(new_location)
+	
+	# Check for NON-HARMFUL events only
+	if event_system:
+		event_system.check_for_travel_event(new_location)
+	
+	# Log to event history
+	var events_container = get_node_or_null("EventsContainer")
+	if events_container and events_container.has_method("add_custom_event"):
+		events_container.add_custom_event("Location Change", 
+			"You traveled to " + new_location + ".",
+			{})
+
+func _on_travel_completed(hours_passed):
+	# Time passes when changing locations
+	advance_time(hours_passed)
+
+	# Show time passage message
+	show_message("Traveling took " + str(hours_passed) + " hours")
+	
+	# Get combat chance for the current location
+	var current_location = $LocationSystem.current_location
+	var combat_chance = $CombatSystem.get_combat_chance($LocationSystem.current_location)
+	
+	# Roll for ambush
+	var roll = randf()
+	if roll < combat_chance:
+		await get_tree().create_timer(1.0).timeout
+		$CombatSystem.start_combat()
