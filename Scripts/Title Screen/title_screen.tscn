@@ -1,10 +1,10 @@
 [gd_scene load_steps=3 format=3 uid="uid://bph6fhqcrmxvi"]
 
-[ext_resource type="Script" uid="uid://bhda5wip2nto5" path="res://title_screen.gd" id="1_v6p8y"]
-[ext_resource type="Texture2D" uid="uid://ba4lh6qh6l24i" path="res://title_logo.png" id="2_ak2if"]
+[ext_resource type="Script" uid="uid://bhda5wip2nto5" path="res://Scripts/Title Screen/title_screen.gd" id="1_nj5ki"]
+[ext_resource type="Texture2D" uid="uid://ba4lh6qh6l24i" path="res://Scripts/Title Screen/title_logo.png" id="2_muvs6"]
 
 [node name="TitleScreen" type="Node"]
-script = ExtResource("1_v6p8y")
+script = ExtResource("1_nj5ki")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -49,7 +49,7 @@ theme_override_constants/margin_bottom = 10
 [node name="Logo" type="TextureRect" parent="CanvasLayer/Control/MainContainer/LogoContainer"]
 custom_minimum_size = Vector2(400, 200)
 layout_mode = 2
-texture = ExtResource("2_ak2if")
+texture = ExtResource("2_muvs6")
 expand_mode = 2
 
 [node name="Spacer" type="Control" parent="CanvasLayer/Control/MainContainer/LogoContainer"]

@@ -2,10 +2,10 @@
 
 [ext_resource type="Script" uid="uid://ds1i7s4u7vhpd" path="res://main_game.gd" id="1_80nbo"]
 [ext_resource type="Script" uid="uid://bjcct7n8uib2h" path="res://Scripts/Drugs/drug_table.gd" id="2_e2o6t"]
-[ext_resource type="Script" uid="uid://lmiaxia3tt3w" path="res://market_system.gd" id="2_fc0e3"]
+[ext_resource type="Script" uid="uid://lmiaxia3tt3w" path="res://Scripts/Market/market_system.gd" id="2_fc0e3"]
 [ext_resource type="Script" uid="uid://bdkla3f5vwq" path="res://Scripts/Combat/combat_system.gd" id="3_7jktm"]
 [ext_resource type="Script" uid="uid://b23c4or8gjifi" path="res://Scripts/Events/event_history.gd" id="3_feb5d"]
-[ext_resource type="Script" uid="uid://bdjnghierh2it" path="res://location_system.gd" id="4_ryrav"]
+[ext_resource type="Script" uid="uid://bdjnghierh2it" path="res://Scripts/Location/location_system.gd" id="4_ryrav"]
 
 [sub_resource type="GDScript" id="GDScript_e2o6t"]
 

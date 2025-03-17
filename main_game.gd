@@ -6,7 +6,7 @@ extends Control
 
 # Preloaded scenes
 const CellphoneUI = preload("res://Scripts/Cellphone/cellphone_ui.tscn")
-const GameOverScreen = preload("res://game_over.tscn")
+const GameOverScreen = preload("res://Scripts/Game Over Screen/game_over.tscn")
 
 # File paths
 var save_file_path = "user://in_the_streets_save.json"
@@ -139,7 +139,7 @@ func _ready():
 	
 		# Create location system
 	var location_system = Node.new()
-	location_system.set_script(load("res://location_system.gd"))
+	location_system.set_script(load("res://Scripts/Location/location_system.gd"))
 	location_system.name = "LocationSystem"
 	add_child(location_system)
 
@@ -150,7 +150,7 @@ func _ready():
 	# Create inventory system
 	var inventory_system = Node.new()
 	inventory_system.name = "InventorySystem"
-	inventory_system.set_script(load("res://inventory_system.gd"))
+	inventory_system.set_script(load("res://Scripts/Inventory/inventory_system.gd"))
 	add_child(inventory_system)
 	
 	# Connect to the inventory system's signals
@@ -557,7 +557,7 @@ func setup_market_dialog():
 	
 	var market_cash_label = Label.new()
 	market_cash_label.name = "CashLabel"
-	cash_label.text = "Your Cash: $" + str(int(cash))
+	cash_label.text = str(int(cash))
 	cash_label.add_theme_font_size_override("font_size", 16)
 	cash_container.add_child(cash_label)
 	
@@ -676,7 +676,7 @@ func show_market():
 			if child is HBoxContainer:
 				for subchild in child.get_children():
 					if subchild is Label and subchild.name == "CashLabel":
-						subchild.text = "Your Cash: $" + str(int(cash))
+						subchild.text = str(int(cash))
 	
 	# Find the bandage description in the items panel
 	var vbox = market_dialog.get_child(0)
@@ -1482,7 +1482,7 @@ func setup_gun_dealer_dialog():
 	
 	var bank_cash_label = Label.new()
 	bank_cash_label.name = "CashDisplay"
-	cash_label.text = "Your Cash: $" + str(int(cash))
+	cash_label.text = str(int(cash))
 	cash_label.add_theme_font_size_override("font_size", 16)
 	cash_container.add_child(cash_label)
 	
@@ -1603,7 +1603,7 @@ func show_gun_dealer():
 			if child is HBoxContainer:
 				for subchild in child.get_children():
 					if subchild is Label and subchild.name == "CashLabel":
-						subchild.text = "Your Cash: $" + str(int(cash))
+						subchild.text = str(int(cash))
 					elif subchild is Label and subchild.name == "RepLabel":
 						subchild.text = "Reputation: " + str(int(reputation)) + "/" + str(max_reputation)
 	
