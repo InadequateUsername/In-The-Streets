@@ -1,0 +1,61 @@
+[gd_scene load_steps=2 format=3 uid="uid://dw5wnumxci6i1"]
+
+[ext_resource type="Script" uid="uid://c5dwxfnf20g1u" path="res://game_over.gd" id="1_y26ei"]
+
+[node name="GameOverScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_y26ei")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.514584, 0.174255, 0.196345, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ColorRect"]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -134.0
+offset_bottom = 47.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="ColorRect/VBoxContainer"]
+layout_mode = 2
+text = "YOU ARE DEAD!"
+horizontal_alignment = 1
+
+[node name="DeathMessage" type="Label" parent="ColorRect/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="ColorRect/VBoxContainer"]
+layout_mode = 2
+
+[node name="CauseOfDeath" type="Label" parent="ColorRect/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="ColorRect/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 6
+
+[node name="NewGameButton" type="Button" parent="ColorRect/VBoxContainer/ButtonsContainer"]
+layout_mode = 2
+text = "New Game"
+
+[node name="LoadGameButton" type="Button" parent="ColorRect/VBoxContainer/ButtonsContainer"]
+layout_mode = 2
+text = "Load Game"

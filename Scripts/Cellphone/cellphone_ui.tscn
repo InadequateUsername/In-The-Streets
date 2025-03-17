@@ -1,0 +1,103 @@
+[gd_scene load_steps=3 format=3 uid="uid://c03mrwttthu1y"]
+
+[ext_resource type="Script" uid="uid://dkquvk7wfil72" path="res://Scripts/Cellphone/cellphone_ui.gd" id="1_fyx6u"]
+[ext_resource type="Texture2D" uid="uid://px2scyw4ojyx" path="res://Scripts/Cellphone/phone-png-12.png" id="2_8rvyj"]
+
+[node name="CellphoneUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = ExtResource("1_fyx6u")
+
+[node name="Popup" type="Popup" parent="."]
+size = Vector2i(320, 604)
+visible = true
+
+[node name="TextureRect" type="TextureRect" parent="Popup"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -21.0
+offset_top = -9.0
+offset_right = 20.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_8rvyj")
+
+[node name="Control" type="Control" parent="Popup/TextureRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 8.0
+offset_right = -17.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Button" type="Button" parent="Popup/TextureRect/Control"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.472
+anchor_top = 0.887
+anchor_right = 0.541
+anchor_bottom = 0.939
+offset_left = -10.576
+offset_top = 4.44397
+offset_right = 6.897
+offset_bottom = 10.868
+grow_horizontal = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Popup/TextureRect/Control"]
+layout_mode = 0
+offset_left = 27.0
+offset_top = 88.0
+offset_right = 298.0
+offset_bottom = 522.0
+
+[node name="Label" type="Label" parent="Popup/TextureRect/Control/VBoxContainer"]
+layout_mode = 2
+text = "S-Mobile                                           📶"
+
+[node name="HSeparator2" type="HSeparator" parent="Popup/TextureRect/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="BankButton" type="Button" parent="Popup/TextureRect/Control/VBoxContainer"]
+layout_mode = 2
+text = "Banking"
+
+[node name="LoanSharkButton" type="Button" parent="Popup/TextureRect/Control/VBoxContainer"]
+layout_mode = 2
+text = "Loan Shark"
+
+[node name="GunDealerButton" type="Button" parent="Popup/TextureRect/Control/VBoxContainer"]
+layout_mode = 2
+text = "Gun Dealer"
+
+[node name="MarketButton" type="Button" parent="Popup/TextureRect/Control/VBoxContainer"]
+layout_mode = 2
+text = "Market"
+
+[node name="HSeparator" type="HSeparator" parent="Popup/TextureRect/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="SaveGameButton" type="Button" parent="Popup/TextureRect/Control/VBoxContainer"]
+layout_mode = 2
+text = "Save Game"
+
+[node name="LoadGameButton" type="Button" parent="Popup/TextureRect/Control/VBoxContainer"]
+layout_mode = 2
+text = "Load Game"
+
+[node name="NewGameButton" type="Button" parent="Popup/TextureRect/Control/VBoxContainer"]
+layout_mode = 2
+text = "New Game"

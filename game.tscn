@@ -1,0 +1,269 @@
+[gd_scene load_steps=6 format=3 uid="uid://g4rwseo2ew52"]
+
+[ext_resource type="Script" uid="uid://ds1i7s4u7vhpd" path="res://main_game.gd" id="1_80nbo"]
+[ext_resource type="Script" uid="uid://bjcct7n8uib2h" path="res://Scripts/Drugs/drug_table.gd" id="2_e2o6t"]
+[ext_resource type="Script" uid="uid://lmiaxia3tt3w" path="res://market_system.gd" id="2_fc0e3"]
+[ext_resource type="Script" uid="uid://b23c4or8gjifi" path="res://Scripts/Events/event_history.gd" id="3_feb5d"]
+
+[sub_resource type="GDScript" id="GDScript_e2o6t"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_80nbo")
+
+[node name="ThemeManager" type="Node" parent="."]
+script = SubResource("GDScript_e2o6t")
+
+[node name="MarketSystem" type="Node" parent="."]
+script = ExtResource("2_fc0e3")
+
+[node name="MainContainer" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1.0
+offset_right = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopSection" type="VBoxContainer" parent="MainContainer"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+size_flags_stretch_ratio = 3.0
+theme_override_constants/separation = 10
+
+[node name="StatsContainer" type="VBoxContainer" parent="MainContainer/TopSection"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="CashRow" type="PanelContainer" parent="MainContainer/TopSection/StatsContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="CashLabel" type="Label" parent="MainContainer/TopSection/StatsContainer/CashRow"]
+layout_mode = 2
+text = "Cash:"
+
+[node name="CashValue" type="Label" parent="MainContainer/TopSection/StatsContainer/CashRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0.866667, 0, 1)
+text = "2000"
+horizontal_alignment = 2
+
+[node name="RepRow" type="PanelContainer" parent="MainContainer/TopSection/StatsContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="RepLabel" type="Label" parent="MainContainer/TopSection/StatsContainer/RepRow"]
+layout_mode = 2
+text = "Reputation:"
+
+[node name="RepValue" type="Label" parent="MainContainer/TopSection/StatsContainer/RepRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.285243, 0.500436, 0.832398, 1)
+text = "0"
+horizontal_alignment = 2
+
+[node name="HeatRow" type="PanelContainer" parent="MainContainer/TopSection/StatsContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="HeatLabel" type="Label" parent="MainContainer/TopSection/StatsContainer/HeatRow"]
+layout_mode = 2
+text = "Heat:"
+
+[node name="HeatValue" type="Label" parent="MainContainer/TopSection/StatsContainer/HeatRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.945098, 0.266667, 0, 1)
+text = "0"
+horizontal_alignment = 2
+
+[node name="HealthContainer" type="HBoxContainer" parent="MainContainer/TopSection/StatsContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="PanelContainer" type="PanelContainer" parent="MainContainer/TopSection/StatsContainer/HealthContainer"]
+layout_mode = 2
+
+[node name="HealthLabel" type="Label" parent="MainContainer/TopSection/StatsContainer/HealthContainer/PanelContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "Health: "
+
+[node name="HealthRow" type="PanelContainer" parent="MainContainer/TopSection/StatsContainer/HealthContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HealthBar" type="ProgressBar" parent="MainContainer/TopSection/StatsContainer/HealthContainer/HealthRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0.67067, 0.131127, 1)
+
+[node name="TimerContainer" type="PanelContainer" parent="MainContainer/TopSection/StatsContainer"]
+layout_mode = 2
+
+[node name="DateTimer" type="Timer" parent="MainContainer/TopSection/StatsContainer/TimerContainer"]
+
+[node name="TimeDisplayLabel" type="Label" parent="MainContainer/TopSection/StatsContainer/TimerContainer"]
+layout_mode = 2
+size_flags_vertical = 1
+
+[node name="LocationContainer" type="PanelContainer" parent="MainContainer/TopSection/StatsContainer"]
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+
+[node name="LocationLabel" type="Label" parent="MainContainer/TopSection/StatsContainer/LocationContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Currently In:"
+
+[node name="LocationButtons" type="GridContainer" parent="MainContainer/TopSection/StatsContainer/LocationContainer"]
+custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
+columns = 2
+
+[node name="Erie" type="Button" parent="MainContainer/TopSection/StatsContainer/LocationContainer/LocationButtons"]
+layout_mode = 2
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.370364, 0.370364, 0.370364, 1)
+text = "Erie"
+
+[node name="York" type="Button" parent="MainContainer/TopSection/StatsContainer/LocationContainer/LocationButtons"]
+layout_mode = 2
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.370364, 0.370364, 0.370364, 1)
+text = "York"
+
+[node name="Kensington" type="Button" parent="MainContainer/TopSection/StatsContainer/LocationContainer/LocationButtons"]
+layout_mode = 2
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.370364, 0.370364, 0.370364, 1)
+text = "Kensington"
+
+[node name="Pittsburgh" type="Button" parent="MainContainer/TopSection/StatsContainer/LocationContainer/LocationButtons"]
+layout_mode = 2
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.370364, 0.370364, 0.370364, 1)
+text = "Pittsburgh"
+
+[node name="LovePark" type="Button" parent="MainContainer/TopSection/StatsContainer/LocationContainer/LocationButtons"]
+layout_mode = 2
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.370364, 0.370364, 0.370364, 1)
+text = "Love Park"
+
+[node name="Reading" type="Button" parent="MainContainer/TopSection/StatsContainer/LocationContainer/LocationButtons"]
+layout_mode = 2
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.370364, 0.370364, 0.370364, 1)
+text = "Reading"
+
+[node name="BottomSection" type="HBoxContainer" parent="MainContainer"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/separation = 10
+
+[node name="MarketContainer" type="VBoxContainer" parent="MainContainer/BottomSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="PanelContainer" type="PanelContainer" parent="MainContainer/BottomSection/MarketContainer"]
+layout_mode = 2
+
+[node name="MarketLabel" type="Label" parent="MainContainer/BottomSection/MarketContainer/PanelContainer"]
+layout_mode = 2
+text = "Market"
+
+[node name="MarketList" type="Control" parent="MainContainer/BottomSection/MarketContainer"]
+layout_mode = 2
+script = ExtResource("2_e2o6t")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainContainer/BottomSection/MarketContainer/MarketList"]
+layout_mode = 0
+offset_right = 83.0
+offset_bottom = 40.0
+
+[node name="ContentContainer" type="VBoxContainer" parent="MainContainer/BottomSection/MarketContainer/MarketList/ScrollContainer"]
+layout_mode = 2
+
+[node name="HeaderRow" type="HBoxContainer" parent="MainContainer/BottomSection/MarketContainer/MarketList/ScrollContainer/ContentContainer"]
+layout_mode = 2
+
+[node name="DrugHeader" type="Label" parent="MainContainer/BottomSection/MarketContainer/MarketList/ScrollContainer/ContentContainer/HeaderRow"]
+layout_mode = 2
+
+[node name="PriceHeader" type="Label" parent="MainContainer/BottomSection/MarketContainer/MarketList/ScrollContainer/ContentContainer/HeaderRow"]
+layout_mode = 2
+
+[node name="ActionButtons" type="HBoxContainer" parent="MainContainer/BottomSection"]
+layout_mode = 2
+size_flags_vertical = 4
+alignment = 1
+
+[node name="GridContainer" type="GridContainer" parent="MainContainer/BottomSection/ActionButtons"]
+layout_mode = 2
+
+[node name="CellphoneButton" type="Button" parent="MainContainer/BottomSection/ActionButtons/GridContainer"]
+layout_mode = 2
+text = "Cellphone"
+
+[node name="BackpackButton" type="Button" parent="MainContainer/BottomSection/ActionButtons/GridContainer"]
+layout_mode = 2
+text = "Backpack"
+
+[node name="InventoryContainer" type="VBoxContainer" parent="MainContainer/BottomSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="PanelContainer" type="PanelContainer" parent="MainContainer/BottomSection/InventoryContainer"]
+layout_mode = 2
+
+[node name="CapacityLabel" type="Label" parent="MainContainer/BottomSection/InventoryContainer/PanelContainer"]
+layout_mode = 2
+text = "Pocket Space: 100/100"
+
+[node name="InventoryList" type="Control" parent="MainContainer/BottomSection/InventoryContainer"]
+layout_mode = 2
+script = ExtResource("2_e2o6t")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainContainer/BottomSection/InventoryContainer/InventoryList"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="ContentContainer" type="VBoxContainer" parent="MainContainer/BottomSection/InventoryContainer/InventoryList/ScrollContainer"]
+layout_mode = 2
+
+[node name="HeaderRow" type="HBoxContainer" parent="MainContainer/BottomSection/InventoryContainer/InventoryList/ScrollContainer/ContentContainer"]
+layout_mode = 2
+
+[node name="DrugHeader" type="Label" parent="MainContainer/BottomSection/InventoryContainer/InventoryList/ScrollContainer/ContentContainer/HeaderRow"]
+layout_mode = 2
+
+[node name="QtyHeader" type="Label" parent="MainContainer/BottomSection/InventoryContainer/InventoryList/ScrollContainer/ContentContainer/HeaderRow"]
+layout_mode = 2
+
+[node name="PriceHeader" type="Label" parent="MainContainer/BottomSection/InventoryContainer/InventoryList/ScrollContainer/ContentContainer/HeaderRow"]
+layout_mode = 2
+
+[node name="EventsContainer" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_left = 198.0
+offset_top = 222.0
+offset_right = 1147.0
+offset_bottom = 403.0
+script = ExtResource("3_feb5d")
