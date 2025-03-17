@@ -163,6 +163,18 @@ func _ready():
 	$MarketSystem.connect("market_updated", Callable(self, "_on_market_updated"))
 	$MarketSystem.connect("market_event_triggered", Callable(self, "_on_market_event_triggered"))
 	
+	var time_manager = Node.new()
+	time_manager.set_script(load("res://time_manager.gd"))
+	time_manager.name = "TimeManager"
+	add_child(time_manager)
+
+	# Connect to the time manager's signals
+	$TimeManager.hour_passed.connect(_on_hour_passed)
+	$TimeManager.day_changed.connect(_on_day_changed)
+	$TimeManager.night_started.connect(_on_night_started)
+	$TimeManager.day_started.connect(_on_day_started)
+	
+	
 	# Set up UI elements and systems
 	setup_message_system()
 	setup_file_dialogs()
@@ -2280,9 +2292,7 @@ func new_game():
 	has_unsaved_changes = false
 	
 	# Reset time to 8 AM on day 1
-	game_hour = 8
-	game_day = 1
-	update_time_display()
+	$TimeManager.set_time(8, 1)
 	
 	# Reset weapons inventory
 	owned_weapons.clear()  # Remove all weapons
@@ -2458,8 +2468,8 @@ func save_game(show_dialog = true):
 		},
 		"location": $LocationSystem.current_location,
 		"time": {
-			"game_hour": int(game_hour),
-			"game_day": int(game_day)
+			"game_hour": int($TimeManager.game_hour),
+			"game_day": int($TimeManager.game_day)
 		},
 		"drugs": {}
 	}
@@ -2675,8 +2685,7 @@ func load_game_from_path(path):
 	
 	# Load time data
 	if save_data.has("time"):
-		game_hour = int(save_data["time"]["game_hour"])
-		game_day = int(save_data["time"]["game_day"])
+		$TimeManager.set_time(int(save_data["time"]["game_hour"]), int(save_data["time"]["game_day"]))
 	
 	# Now set the drug data
 	if save_data.has("drugs"):
@@ -2684,7 +2693,6 @@ func load_game_from_path(path):
 	
 	# Update all UI elements
 	update_stats_display()
-	update_time_display()
 	update_market_display()
 	$InventorySystem.update_inventory_display()
 	
@@ -2713,88 +2721,9 @@ func get_all_nodes(node):
 	return nodes
 
 
-
 #==============================================================================
 # Timer Functions
 #==============================================================================
-# Add this function to initialize the time system in _ready() after other initializations
-func setup_time_system():
-	# Use the existing TimeDisplayLabel node you've already added
-	time_display_label = get_node_or_null("MainContainer/TopSection/StatsContainer/LocationContainer/TimerContainer/TimeDisplayLabel")
-	
-	if not is_instance_valid(time_display_label):
-		# Try direct path as seen in the screenshot
-		time_display_label = get_node_or_null("TimerContainer/TimeDisplayLabel")
-		
-		if not is_instance_valid(time_display_label):
-			# Final fallback - search the entire tree
-			time_display_label = find_node_by_name_recursive(self, "TimeDisplayLabel")
-			
-	if not is_instance_valid(time_display_label):
-		print("WARNING: TimeDisplayLabel not found!")
-		return
-	
-	# Update display initially
-	update_time_display()
-	
-	# Configure the timer node
-	var date_timer = get_node_or_null("DateTimer")
-	if not is_instance_valid(date_timer):
-		date_timer = find_node_by_name_recursive(self, "DateTimer")
-	
-	if is_instance_valid(date_timer):
-		date_timer.wait_time = 60.0 / time_speed  # Convert to seconds
-		date_timer.autostart = true
-		date_timer.one_shot = false
-		
-		# Disconnect any existing connections to avoid duplicates
-		if date_timer.is_connected("timeout", Callable(self, "_on_time_tick")):
-			date_timer.timeout.disconnect(_on_time_tick)
-			
-		# Connect the timer
-		date_timer.timeout.connect(_on_time_tick)
-	else:
-		print("WARNING: DateTimer node not found! Time system won't function.")
-
-# The rest of the time system functions remain the same
-func _on_time_tick():
-	# Advance time by 1 hour
-	game_hour += 1
-	
-	# Handle day change
-	if game_hour >= 24:
-		game_hour = 0
-		game_day += 1
-		
-		# Process daily events
-		process_daily_events()
-	
-	# Update UI with new time
-	update_time_display()
-	
-	# Apply time-of-day effects
-	apply_time_of_day_effects()
-
-# Add this function to handle each timer tick
-func update_time_display():
-	if is_instance_valid(time_display_label):
-		# Format the time display
-		var am_pm = "AM" if game_hour < 12 else "PM"
-		var display_hour = game_hour
-		if display_hour == 0:
-			display_hour = 12
-		elif display_hour > 12:
-			display_hour -= 12
-			
-		time_display_label.text = "Day " + str(game_day) + " • " + str(display_hour) + ":00 " + am_pm
-		
-		# Change color based on time of day
-		if game_hour >= 6 and game_hour < 18:
-			# Daytime - use normal color
-			time_display_label.add_theme_color_override("font_color", Color(1, 1, 1))
-		else:
-			# Nighttime - use slightly blue tint
-			time_display_label.add_theme_color_override("font_color", Color(0.7, 0.7, 1.0))
 
 # Helper function to find a node by name recursively
 func find_node_by_name_recursive(node, name):
@@ -2807,72 +2736,38 @@ func find_node_by_name_recursive(node, name):
 			return found
 	
 	return null
+	
+# Add this function to initialize the time system in _ready() after other initializations
+func setup_time_system():
+	# Just pass the references to TimeManager that it needs
+	var time_display_label = get_node_or_null("MainContainer/TopSection/StatsContainer/LocationContainer/TimerContainer/TimeDisplayLabel")
+	
+	if not is_instance_valid(time_display_label):
+		# Try direct path as seen in the screenshot
+		time_display_label = get_node_or_null("TimerContainer/TimeDisplayLabel")
 
-# Add this function to process events that happen daily
-func process_daily_events():
+		if not is_instance_valid(time_display_label):
+			# Final fallback - search the entire tree
+			time_display_label = find_node_by_name_recursive(self, "TimeDisplayLabel")
 	
-		# Log to event history
-	var events_container = get_node_or_null("EventsContainer")
-	if events_container and events_container.has_method("add_custom_event"):
-		var summary = "A new day has begun."
-		var effects = {}
-		
-		if debt > 0:
-			var interest = int(debt * 0.1)
-			summary += " Loan shark applied $" + str(interest) + " interest."
-			effects["cash"] = 0  # Not directly affecting cash, but record it
-		
-		if bank > 0:
-			var interest = int(bank * 0.025)
-			summary += " Bank added $" + str(interest) + " interest."
-			effects["cash"] = 0  # Not directly affecting cash, but record it
-		
-		events_container.add_custom_event("New Day", summary, effects)
-	# Process loan interest
-	if debt > 0:
-		# 10% daily interest on loans
-		var interest = int(debt * 0.1)
-		debt += interest
-		show_message("Loan Shark applied daily interest: $" + str(interest))
+	if is_instance_valid(time_display_label):
+		# Pass the label reference to TimeManager
+		$TimeManager.time_display_label = time_display_label
+	else:
+		print("WARNING: TimeDisplayLabel not found!")
 	
-	# Process bank interest
-	if bank > 0:
-		# 2.5% daily interest on savings
-		var interest = int(bank * 0.025)
-		bank += interest
-		show_message("Bank added daily interest: $" + str(interest))
-	
-	# Random market events
-	if randf() < 0.3:  # 30% chance
-		$MarketSystem.update_market_prices($LocationSystem.current_location)
-		update_market_display()
-		show_message("Market prices have changed with the new day")
-	
-	# Update UI
-	update_stats_display()
+	# Configure the timer node if it exists
+	var date_timer = get_node_or_null("DateTimer")
+	if not is_instance_valid(date_timer):
+		date_timer = find_node_by_name_recursive(self, "DateTimer")
 
-# Add this function to apply effects based on time of day
-func apply_time_of_day_effects():
-	# Different events or modifiers can happen at different times
-	
-	# More dangerous at night (higher combat chance)
-	if game_hour >= 22 or game_hour < 5:
-		# Nighttime is more dangerous
-		event_system.event_chance = 0.4  # 40% chance of random events at night
+	if is_instance_valid(date_timer):
+		# Pass time speed to TimeManager
+		$TimeManager.time_speed = time_speed
+		# We don't need to connect anything here anymore, TimeManager will handle it
 	else:
-		# Daytime is safer
-		event_system.event_chance = 0.3  # 30% chance during day
-	
-	# Market closed late at night
-	if game_hour >= 2 and game_hour < 6:
-		if market_list and market_list.get_child_count() > 0:
-			# Market is closed - can't buy/sell during these hours
-			market_list.clear()
-			market_list.add_item(["MARKET CLOSED", "COME BACK LATER"])
-	else:
-		# Market is open, ensure prices are displayed
-		if $LocationSystem.current_location != "" and (market_list.get_child_count() <= 0 or market_list.rows.size() <= 1):
-			update_market_display()
+		print("WARNING: DateTimer node not found! Creating a new one.")
+		# Let TimeManager know it needs to create its own timer
 
 # Add this helper function to advance time by a specific number of hours
 func advance_time(hours):
@@ -2881,10 +2776,6 @@ func advance_time(hours):
 		if game_hour >= 24:
 			game_hour = 0
 			game_day += 1
-			process_daily_events()
-	
-	update_time_display()
-	apply_time_of_day_effects()
 
 # Returns a formatted time string
 func get_time_string():
@@ -3065,7 +2956,7 @@ func _on_location_changed(new_location):
 
 func _on_travel_completed(hours_passed):
 	# Time passes when changing locations
-	advance_time(hours_passed)
+	$TimeManager.advance_time(hours_passed)
 
 	# Show time passage message
 	show_message("Traveling took " + str(hours_passed) + " hours")
@@ -3079,3 +2970,35 @@ func _on_travel_completed(hours_passed):
 	if roll < combat_chance:
 		await get_tree().create_timer(1.0).timeout
 		$CombatSystem.start_combat()
+
+
+#######################################################
+# TIME MANAGER
+#######################################################
+
+# Handler for when an hour passes
+func _on_hour_passed(current_hour):
+	# Any specific logic needed when an hour passes
+	pass
+
+# Handler for when the day changes
+func _on_day_changed(new_day):
+	# Any specific logic needed when the day changes
+	has_unsaved_changes = true
+
+# Handler for when night begins
+func _on_night_started():
+	# Any specific logic for nighttime
+	show_message("Night has fallen. Be careful out there!")
+
+# Handler for when day begins
+func _on_day_started():
+	# Any specific logic for daytime
+	show_message("A new day has dawned.")
+
+
+
+
+#######################################################
+# TIME MANAGER
+#######################################################
