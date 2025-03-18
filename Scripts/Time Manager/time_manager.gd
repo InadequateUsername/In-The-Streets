@@ -23,7 +23,7 @@ const NIGHT_START_HOUR = 18
 
 func _ready():
 	# Get reference to main game
-	main_game = get_parent()
+	main_game = get_node("/root/Control")
 	
 	# Get UI references
 	time_display_label = main_game.get_node_or_null("MainContainer/TopSection/StatsContainer/LocationContainer/TimerContainer/TimeDisplayLabel")
@@ -63,8 +63,26 @@ func _ready():
 		new_timer.wait_time = 60.0 / time_speed
 		new_timer.autostart = true
 		new_timer.one_shot = false
-		main_game.add_child(new_timer)
-		new_timer.timeout.connect(_on_time_tick)
+		
+		# Use call_deferred to add the child safely
+		main_game.call_deferred("add_child", new_timer)
+		
+		# We also need to defer connecting the signal until the node is actually added
+		# We can use a one-shot timer to do this
+		var connect_timer = Timer.new()
+		connect_timer.wait_time = 0.1  # Small delay
+		connect_timer.one_shot = true
+		connect_timer.autostart = true
+		
+		# Add this timer
+		add_child(connect_timer)
+		
+		# Connect after a short delay
+		connect_timer.timeout.connect(func():
+			if is_instance_valid(new_timer):
+				new_timer.timeout.connect(_on_time_tick)
+			connect_timer.queue_free()  # Clean up the timer
+		)
 
 # Advances time by one hour (called by timer)
 func _on_time_tick():
@@ -154,7 +172,7 @@ func process_daily_events():
 	
 	# Random market events
 	if randf() < 0.3:  # 30% chance
-		main_game.get_node("MarketSystem").update_market_prices(main_game.get_node("LocationSystem").current_location)
+		main_game.get_node("Scripts/MarketSystem").update_market_prices(main_game.get_node("Scripts/LocationSystem").current_location)
 		main_game.update_market_display()
 		main_game.show_message("Market prices have changed with the new day")
 	
@@ -187,7 +205,7 @@ func apply_time_of_day_effects():
 	else:
 		# Market is open, ensure prices are displayed
 		var market_list = main_game.get_node_or_null("MainContainer/BottomSection/MarketContainer/MarketList")
-		if market_list and main_game.get_node("LocationSystem").current_location != "" and (market_list.get_child_count() <= 0 or market_list.rows.size() <= 1):
+		if market_list and main_game.get_node("Scripts/LocationSystem").current_location != "" and (market_list.get_child_count() <= 0 or market_list.rows.size() <= 1):
 			main_game.update_market_display()
 
 # Advance time by a specific number of hours

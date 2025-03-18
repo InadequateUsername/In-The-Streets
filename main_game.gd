@@ -144,8 +144,8 @@ func _ready():
 	add_child(location_system)
 
 	# Connect to the location system's signals
-	$LocationSystem.location_changed.connect(_on_location_changed)
-	$LocationSystem.travel_completed.connect(_on_travel_completed)
+	$Scripts/LocationSystem.location_changed.connect(_on_location_changed)
+	$Scripts/LocationSystem.travel_completed.connect(_on_travel_completed)
 	
 	# Create inventory system
 	var inventory_system = Node.new()
@@ -154,26 +154,14 @@ func _ready():
 	add_child(inventory_system)
 	
 	# Connect to the inventory system's signals
-	$InventorySystem.inventory_changed.connect(_on_inventory_changed)
-	$InventorySystem.capacity_changed.connect(_on_capacity_changed)
-	$InventorySystem.drug_purchased.connect(_on_drug_purchased)
-	$InventorySystem.drug_sold.connect(_on_drug_sold)
+	$Scripts/InventorySystem.inventory_changed.connect(_on_inventory_changed)
+	$Scripts/InventorySystem.capacity_changed.connect(_on_capacity_changed)
+	$Scripts/InventorySystem.drug_purchased.connect(_on_drug_purchased)
+	$Scripts/InventorySystem.drug_sold.connect(_on_drug_sold)
 	
 	# Connect to the market system's signals
-	$MarketSystem.connect("market_updated", Callable(self, "_on_market_updated"))
-	$MarketSystem.connect("market_event_triggered", Callable(self, "_on_market_event_triggered"))
-	
-	var time_manager = Node.new()
-	time_manager.set_script(load("res://time_manager.gd"))
-	time_manager.name = "TimeManager"
-	add_child(time_manager)
-
-	# Connect to the time manager's signals
-	$TimeManager.hour_passed.connect(_on_hour_passed)
-	$TimeManager.day_changed.connect(_on_day_changed)
-	$TimeManager.night_started.connect(_on_night_started)
-	$TimeManager.day_started.connect(_on_day_started)
-	
+	$Scripts/MarketSystem.connect("market_updated", Callable(self, "_on_market_updated"))
+	$Scripts/MarketSystem.connect("market_event_triggered", Callable(self, "_on_market_event_triggered"))
 	
 	# Set up UI elements and systems
 	setup_message_system()
@@ -271,14 +259,14 @@ func _direct_save_no_wait():
 			"debt": int(debt),
 			"guns": int(guns),
 			"health": int(health),
-			"current_capacity": int($InventorySystem.current_capacity),
+			"current_capacity": int($Scripts/InventorySystem.current_capacity),
 			"heat": int(heat),
 			"reputation": int(reputation),
 			"weapons": {},  # Will fill separately
 			"equipped_weapon": equipped_weapon,
 			"medical_supplies": {}  # Will fill separately
 		},
-		"location": $LocationSystem.current_location,
+		"location": $Scripts/LocationSystem.current_location,
 		"time": {
 			"game_hour": int(game_hour),
 			"game_day": int(game_day)
@@ -287,7 +275,7 @@ func _direct_save_no_wait():
 	}
 
 	# Get drugs from inventory system
-	var drugs_data = $InventorySystem.get_drug_data()
+	var drugs_data = $Scripts/InventorySystem.get_drug_data()
 	for drug_name in drugs_data:
 		save_data["drugs"][drug_name] = {
 			"price": int(drugs_data[drug_name]["price"]),
@@ -392,11 +380,11 @@ func update_stats_display():
 func update_market_display():
 	market_list.clear()
 	
-	if $LocationSystem.current_location.is_empty():
+	if $Scripts/LocationSystem.current_location.is_empty():
 		return
 	
 	# Get current prices from MarketSystem
-	var drug_prices = $MarketSystem.get_current_prices()
+	var drug_prices = $Scripts/MarketSystem.get_current_prices()
 
 	market_list.set_columns(["Drug", "Price"], [0.6, 0.4])
 
@@ -500,11 +488,11 @@ func trigger_police_event():
 			# Reduce inventory
 			if selected_event.effects.has("inventory") and selected_event.effects.inventory < 0:
 				var reduction = abs(selected_event.effects.inventory)
-				$InventorySystem.reduce_inventory(reduction)
+				$Scripts/InventorySystem.reduce_inventory(reduction)
 			
 			# Update capacity
-			$InventorySystem.calculate_current_capacity()
-			$InventorySystem.update_inventory_display()
+			$Scripts/InventorySystem.calculate_current_capacity()
+			$Scripts/InventorySystem.update_inventory_display()
 
 
 #==============================================================================
@@ -571,7 +559,7 @@ func setup_market_dialog():
 	market_cash_label.name = "CashLabel"
 	cash_label.text = str(int(cash))
 	cash_label.add_theme_font_size_override("font_size", 16)
-	cash_container.add_child(cash_label)
+	cash_container.add_child(market_cash_label)
 	
 	# Spacer
 	var spacer1 = Control.new()
@@ -1427,10 +1415,10 @@ func show_police_info():
 	message += "- High: York, Pittsburgh\n"
 	message += "- Medium: Erie, Kensington\n"
 	message += "- Low: Love Park, Reading\n"
-	message += "\nCurrent location: " + $LocationSystem.current_location
+	message += "\nCurrent location: " + $Scripts/LocationSystem.current_location
 	
 	cellphone_instance.update_message(message)
-	show_message("Police are active in " + $LocationSystem.current_location)
+	show_message("Police are active in " + $Scripts/LocationSystem.current_location)
 
 #==============================================================================
 # WEAPONS AND GUN DEALER SYSTEM
@@ -1496,7 +1484,7 @@ func setup_gun_dealer_dialog():
 	bank_cash_label.name = "CashDisplay"
 	cash_label.text = str(int(cash))
 	cash_label.add_theme_font_size_override("font_size", 16)
-	cash_container.add_child(cash_label)
+	cash_container.add_child(bank_cash_label)
 	
 	# Reputation display with icon
 	var rep_container = HBoxContainer.new()
@@ -2292,23 +2280,25 @@ func new_game():
 	has_unsaved_changes = false
 	
 	# Reset time to 8 AM on day 1
-	$TimeManager.set_time(8, 1)
+	game_hour = 8
+	game_day = 1
+	update_time_display()
 	
 	# Reset weapons inventory
 	owned_weapons.clear()  # Remove all weapons
 	equipped_weapon = ""   # Unequip any weapon
 	
-	$InventorySystem.reset_inventory()
+	$Scripts/InventorySystem.reset_inventory()
 	
 	# Reset game over state if needed
 	game_over = false
 	
 	# Reset capacity
-	$InventorySystem.current_capacity = 0
+	$Scripts/InventorySystem.current_capacity = 0
 
 	# Set starting location
-	$LocationSystem.set_initial_location("Kensington")
-	location_label.text = "Currently In:  " + $LocationSystem.current_location
+	$Scripts/LocationSystem.set_initial_location("Kensington")
+	location_label.text = "Currently In:  " + $Scripts/LocationSystem.current_location
 	medical_supplies = {
 		"Bandages": {"price": 50, "qty": 0, "health_restore": 15}
 	}
@@ -2318,16 +2308,16 @@ func new_game():
 	if events_container and events_container.has_method("clear_events"):
 		events_container.clear_events()
 		events_container.add_custom_event("New Game Started", 
-			"Welcome to In The Streets! You start in " + $LocationSystem.current_location + " with $" + str(cash) + ".",
+			"Welcome to In The Streets! You start in " + $Scripts/LocationSystem.current_location + " with $" + str(cash) + ".",
 			{"cash": cash})
 	
 	# Show welcome message
-	show_message("Welcome to " + $LocationSystem.current_location)
+	show_message("Welcome to " + $Scripts/LocationSystem.current_location)
 
 	# Update all UI elements
 	update_stats_display()
 	update_market_display()
-	$InventorySystem.update_inventory_display()
+	$Scripts/InventorySystem.update_inventory_display()
 	show_message("New game started!")
 
 # Confirms starting a new game
@@ -2459,17 +2449,17 @@ func save_game(show_dialog = true):
 			"debt": int(debt),
 			"guns": int(guns),
 			"health": int(health),
-			"current_capacity": int($InventorySystem.current_capacity),
+			"current_capacity": int($Scripts/InventorySystem.current_capacity),
 			"heat": int(heat),
 			"reputation": int(reputation),
 			"weapons": {},  # Will fill this separately
 			"equipped_weapon": equipped_weapon,
 			"medical_supplies": {}  # Will fill this separately
 		},
-		"location": $LocationSystem.current_location,
+		"location": $Scripts/LocationSystem.current_location,
 		"time": {
-			"game_hour": int($TimeManager.game_hour),
-			"game_day": int($TimeManager.game_day)
+			"game_hour": int(game_hour),
+			"game_day": int(game_day)
 		},
 		"drugs": {}
 	}
@@ -2537,14 +2527,14 @@ func _on_save_dialog_file_selected(path):
 			"debt": int(debt),
 			"guns": int(guns),
 			"health": int(health),
-			"current_capacity": int($InventorySystem.current_capacity),
+			"current_capacity": int($Scripts/InventorySystem.current_capacity),
 			"heat": int(heat),
 			"reputation": int(reputation),
 			"weapons": {},  # Will fill separately
 			"equipped_weapon": equipped_weapon,
 			"medical_supplies": {}  # Will fill separately
 		},
-		"location": $LocationSystem.current_location,
+		"location": $Scripts/LocationSystem.current_location,
 		"time": {
 			"game_hour": int(game_hour),
 			"game_day": int(game_day)
@@ -2681,20 +2671,22 @@ func load_game_from_path(path):
 	
 	# Load location
 	if save_data.has("location"):
-		$LocationSystem.set_initial_location(save_data["location"])
+		$Scripts/LocationSystem.set_initial_location(save_data["location"])
 	
 	# Load time data
 	if save_data.has("time"):
-		$TimeManager.set_time(int(save_data["time"]["game_hour"]), int(save_data["time"]["game_day"]))
+		game_hour = int(save_data["time"]["game_hour"])
+		game_day = int(save_data["time"]["game_day"])
 	
 	# Now set the drug data
 	if save_data.has("drugs"):
-		$InventorySystem.set_drug_data(save_data["drugs"])
+		$Scripts/InventorySystem.set_drug_data(save_data["drugs"])
 	
 	# Update all UI elements
 	update_stats_display()
+	update_time_display()
 	update_market_display()
-	$InventorySystem.update_inventory_display()
+	$Scripts/InventorySystem.update_inventory_display()
 	
 	show_message("Game loaded successfully!", 3.0)
 	return true
@@ -2721,9 +2713,88 @@ func get_all_nodes(node):
 	return nodes
 
 
+
 #==============================================================================
 # Timer Functions
 #==============================================================================
+# Add this function to initialize the time system in _ready() after other initializations
+func setup_time_system():
+	# Use the existing TimeDisplayLabel node you've already added
+	time_display_label = get_node_or_null("MainContainer/TopSection/StatsContainer/LocationContainer/TimerContainer/TimeDisplayLabel")
+	
+	if not is_instance_valid(time_display_label):
+		# Try direct path as seen in the screenshot
+		time_display_label = get_node_or_null("TimerContainer/TimeDisplayLabel")
+		
+		if not is_instance_valid(time_display_label):
+			# Final fallback - search the entire tree
+			time_display_label = find_node_by_name_recursive(self, "TimeDisplayLabel")
+			
+	if not is_instance_valid(time_display_label):
+		print("WARNING: TimeDisplayLabel not found!")
+		return
+	
+	# Update display initially
+	update_time_display()
+	
+	# Configure the timer node
+	var date_timer = get_node_or_null("DateTimer")
+	if not is_instance_valid(date_timer):
+		date_timer = find_node_by_name_recursive(self, "DateTimer")
+	
+	if is_instance_valid(date_timer):
+		date_timer.wait_time = 60.0 / time_speed  # Convert to seconds
+		date_timer.autostart = true
+		date_timer.one_shot = false
+		
+		# Disconnect any existing connections to avoid duplicates
+		if date_timer.is_connected("timeout", Callable(self, "_on_time_tick")):
+			date_timer.timeout.disconnect(_on_time_tick)
+			
+		# Connect the timer
+		date_timer.timeout.connect(_on_time_tick)
+	else:
+		print("WARNING: DateTimer node not found! Time system won't function.")
+
+# The rest of the time system functions remain the same
+func _on_time_tick():
+	# Advance time by 1 hour
+	game_hour += 1
+	
+	# Handle day change
+	if game_hour >= 24:
+		game_hour = 0
+		game_day += 1
+		
+		# Process daily events
+		process_daily_events()
+	
+	# Update UI with new time
+	update_time_display()
+	
+	# Apply time-of-day effects
+	apply_time_of_day_effects()
+
+# Add this function to handle each timer tick
+func update_time_display():
+	if is_instance_valid(time_display_label):
+		# Format the time display
+		var am_pm = "AM" if game_hour < 12 else "PM"
+		var display_hour = game_hour
+		if display_hour == 0:
+			display_hour = 12
+		elif display_hour > 12:
+			display_hour -= 12
+			
+		time_display_label.text = "Day " + str(game_day) + " • " + str(display_hour) + ":00 " + am_pm
+		
+		# Change color based on time of day
+		if game_hour >= 6 and game_hour < 18:
+			# Daytime - use normal color
+			time_display_label.add_theme_color_override("font_color", Color(1, 1, 1))
+		else:
+			# Nighttime - use slightly blue tint
+			time_display_label.add_theme_color_override("font_color", Color(0.7, 0.7, 1.0))
 
 # Helper function to find a node by name recursively
 func find_node_by_name_recursive(node, name):
@@ -2736,38 +2807,72 @@ func find_node_by_name_recursive(node, name):
 			return found
 	
 	return null
-	
-# Add this function to initialize the time system in _ready() after other initializations
-func setup_time_system():
-	# Just pass the references to TimeManager that it needs
-	var time_display_label = get_node_or_null("MainContainer/TopSection/StatsContainer/LocationContainer/TimerContainer/TimeDisplayLabel")
-	
-	if not is_instance_valid(time_display_label):
-		# Try direct path as seen in the screenshot
-		time_display_label = get_node_or_null("TimerContainer/TimeDisplayLabel")
 
-		if not is_instance_valid(time_display_label):
-			# Final fallback - search the entire tree
-			time_display_label = find_node_by_name_recursive(self, "TimeDisplayLabel")
+# Add this function to process events that happen daily
+func process_daily_events():
 	
-	if is_instance_valid(time_display_label):
-		# Pass the label reference to TimeManager
-		$TimeManager.time_display_label = time_display_label
-	else:
-		print("WARNING: TimeDisplayLabel not found!")
+		# Log to event history
+	var events_container = get_node_or_null("EventsContainer")
+	if events_container and events_container.has_method("add_custom_event"):
+		var summary = "A new day has begun."
+		var effects = {}
+		
+		if debt > 0:
+			var interest = int(debt * 0.1)
+			summary += " Loan shark applied $" + str(interest) + " interest."
+			effects["cash"] = 0  # Not directly affecting cash, but record it
+		
+		if bank > 0:
+			var interest = int(bank * 0.025)
+			summary += " Bank added $" + str(interest) + " interest."
+			effects["cash"] = 0  # Not directly affecting cash, but record it
+		
+		events_container.add_custom_event("New Day", summary, effects)
+	# Process loan interest
+	if debt > 0:
+		# 10% daily interest on loans
+		var interest = int(debt * 0.1)
+		debt += interest
+		show_message("Loan Shark applied daily interest: $" + str(interest))
 	
-	# Configure the timer node if it exists
-	var date_timer = get_node_or_null("DateTimer")
-	if not is_instance_valid(date_timer):
-		date_timer = find_node_by_name_recursive(self, "DateTimer")
+	# Process bank interest
+	if bank > 0:
+		# 2.5% daily interest on savings
+		var interest = int(bank * 0.025)
+		bank += interest
+		show_message("Bank added daily interest: $" + str(interest))
+	
+	# Random market events
+	if randf() < 0.3:  # 30% chance
+		$Scripts/MarketSystem.update_market_prices($Scripts/LocationSystem.current_location)
+		update_market_display()
+		show_message("Market prices have changed with the new day")
+	
+	# Update UI
+	update_stats_display()
 
-	if is_instance_valid(date_timer):
-		# Pass time speed to TimeManager
-		$TimeManager.time_speed = time_speed
-		# We don't need to connect anything here anymore, TimeManager will handle it
+# Add this function to apply effects based on time of day
+func apply_time_of_day_effects():
+	# Different events or modifiers can happen at different times
+	
+	# More dangerous at night (higher combat chance)
+	if game_hour >= 22 or game_hour < 5:
+		# Nighttime is more dangerous
+		event_system.event_chance = 0.4  # 40% chance of random events at night
 	else:
-		print("WARNING: DateTimer node not found! Creating a new one.")
-		# Let TimeManager know it needs to create its own timer
+		# Daytime is safer
+		event_system.event_chance = 0.3  # 30% chance during day
+	
+	# Market closed late at night
+	if game_hour >= 2 and game_hour < 6:
+		if market_list and market_list.get_child_count() > 0:
+			# Market is closed - can't buy/sell during these hours
+			market_list.clear()
+			market_list.add_item(["MARKET CLOSED", "COME BACK LATER"])
+	else:
+		# Market is open, ensure prices are displayed
+		if $Scripts/LocationSystem.current_location != "" and (market_list.get_child_count() <= 0 or market_list.rows.size() <= 1):
+			update_market_display()
 
 # Add this helper function to advance time by a specific number of hours
 func advance_time(hours):
@@ -2776,6 +2881,10 @@ func advance_time(hours):
 		if game_hour >= 24:
 			game_hour = 0
 			game_day += 1
+			process_daily_events()
+	
+	update_time_display()
+	apply_time_of_day_effects()
 
 # Returns a formatted time string
 func get_time_string():
@@ -2823,10 +2932,10 @@ func setup_event_history():
 
 
 func buy_drugs():
-	$InventorySystem.buy_drugs()
+	$Scripts/InventorySystem.buy_drugs()
 
 func sell_drugs():
-	$InventorySystem.sell_drugs()
+	$Scripts/InventorySystem.sell_drugs()
 
 func _on_inventory_changed():
 	# Any additional logic when inventory changes
@@ -2854,19 +2963,19 @@ func _on_drug_sold(drug_name, quantity, revenue):
 
 # Get drugs data from InventorySystem
 func get_drugs():
-	return $InventorySystem.get_drug_data()
+	return $Scripts/InventorySystem.get_drug_data()
 
 # Get base drug prices from InventorySystem
 func get_base_drug_prices():
-	return $MarketSystem.base_drug_prices
+	return $Scripts/MarketSystem.base_drug_prices
 
 # Update drug price in InventorySystem
 func set_drug_price(drug_name, price):
 	# Update in MarketSystem (source of truth)
-	$MarketSystem.set_drug_price(drug_name, price)
+	$Scripts/MarketSystem.set_drug_price(drug_name, price)
 
 	# Also update in InventorySystem (display copy)
-	var drugs_data = $InventorySystem.get_drug_data()
+	var drugs_data = $Scripts/InventorySystem.get_drug_data()
 	if drugs_data.has(drug_name):
 		drugs_data[drug_name]["price"] = price
 		
@@ -2879,7 +2988,7 @@ func _on_market_updated(drug_prices):
 	update_market_display()
 	for drug_name in drug_prices:
 		if drug_name != "event_drug":  # Skip internal marker
-			$InventorySystem.update_drug_price(drug_name, drug_prices[drug_name])
+			$Scripts/InventorySystem.update_drug_price(drug_name, drug_prices[drug_name])
 			
 			
 			
@@ -2941,7 +3050,7 @@ func _on_enemy_damaged(amount):
 
 func _on_location_changed(new_location):
 	# Market updates when changing location
-	$MarketSystem.update_market_prices(new_location)
+	$Scripts/MarketSystem.update_market_prices(new_location)
 	
 	# Check for NON-HARMFUL events only
 	if event_system:
@@ -2956,49 +3065,17 @@ func _on_location_changed(new_location):
 
 func _on_travel_completed(hours_passed):
 	# Time passes when changing locations
-	$TimeManager.advance_time(hours_passed)
+	advance_time(hours_passed)
 
 	# Show time passage message
 	show_message("Traveling took " + str(hours_passed) + " hours")
 	
 	# Get combat chance for the current location
-	var current_location = $LocationSystem.current_location
-	var combat_chance = $CombatSystem.get_combat_chance($LocationSystem.current_location)
+	var current_location = $Scripts/LocationSystem.current_location
+	var combat_chance = $Scripts/CombatSystem.get_combat_chance($Scripts/LocationSystem.current_location)
 	
 	# Roll for ambush
 	var roll = randf()
 	if roll < combat_chance:
 		await get_tree().create_timer(1.0).timeout
-		$CombatSystem.start_combat()
-
-
-#######################################################
-# TIME MANAGER
-#######################################################
-
-# Handler for when an hour passes
-func _on_hour_passed(current_hour):
-	# Any specific logic needed when an hour passes
-	pass
-
-# Handler for when the day changes
-func _on_day_changed(new_day):
-	# Any specific logic needed when the day changes
-	has_unsaved_changes = true
-
-# Handler for when night begins
-func _on_night_started():
-	# Any specific logic for nighttime
-	show_message("Night has fallen. Be careful out there!")
-
-# Handler for when day begins
-func _on_day_started():
-	# Any specific logic for daytime
-	show_message("A new day has dawned.")
-
-
-
-
-#######################################################
-# TIME MANAGER
-#######################################################
+		$Scripts/CombatSystem.start_combat()
