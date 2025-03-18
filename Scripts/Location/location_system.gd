@@ -24,7 +24,7 @@ var current_location = ""
 
 func _ready():
 	# Get reference to main game
-	main_game = get_parent()
+	main_game = get_node("/root/Control")
 	
 	# Get UI references
 	location_label = main_game.get_node_or_null("MainContainer/TopSection/StatsContainer/LocationContainer/LocationLabel")

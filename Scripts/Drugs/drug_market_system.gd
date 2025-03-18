@@ -153,9 +153,9 @@ func _ready():
 		player_inventory[drug] = 0
 	
 	# Get references to UI containers (these should be set up in the scene)
-	market_container = get_parent().get_node("/root/Control/MainContainer/BottomSection/MarketContainer")
-	inventory_container = get_parent().get_node("/root/Control/MainContainer/BottomSection/InventoryContainer")
-	cash_label = get_parent().get_node("/root/Control/MainContainer/TopSection/StatsContainer/CashRow/CashLabel")
+	market_container = get_parent().get_node("MainContainer/BottomSection/MarketContainer")
+	inventory_container = get_parent().get_node("MainContainer/BottomSection/InventoryContainer")
+	cash_label = get_parent().get_node("MainContainer/TopSection/StatsContainer/CashRow/CashLabel")
 	
 	# Initial setup with starting location
 	update_market("Bronx")  # Replace with actual starting location

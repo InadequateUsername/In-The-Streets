@@ -30,7 +30,7 @@ var enemies = {
 
 func _ready():
 	# Get reference to main game
-	main_game = get_parent()
+	main_game = get_node("/root/Control")
 	
 	# Setup combat dialog
 	setup_combat_dialog()
@@ -120,7 +120,7 @@ func start_combat():
 	in_combat = true
 	
 	# Choose enemy based on location
-	var current_location = main_game.get_node("LocationSystem").current_location
+	var current_location = main_game.get_node("Scripts/LocationSystem").current_location
 	var location_enemies = enemies["Erie"]  # Default enemy
 	
 	if enemies.has(current_location):
@@ -323,7 +323,7 @@ func end_combat(victory):
 			if drugs_to_remove.size() > 0:
 				var random_drug = drugs_to_remove[randi() % drugs_to_remove.size()]
 				var lost_amount = int(drugs_data[random_drug]["qty"] * 0.5)
-				main_game.get_node("InventorySystem").remove_drug(random_drug, lost_amount)
+				main_game.get_node("Scripts/InventorySystem").remove_drug(random_drug, lost_amount)
 				
 				if events_container and events_container.has_method("add_custom_event"):
 					events_container.add_custom_event("Escaped Combat", 
@@ -348,7 +348,7 @@ func end_combat(victory):
 	
 	# Update main game UI
 	main_game.update_stats_display()
-	main_game.get_node("InventorySystem").update_inventory_display()
+	main_game.get_node("Scripts/InventorySystem").update_inventory_display()
 
 # Uses a weapon during combat
 func use_weapon():

@@ -49,7 +49,7 @@ var main_game
 # Initialize with base values
 func _ready():
 	# Get reference to main game
-	main_game = get_parent()
+	main_game = get_node("/root/Control")
 	
 	# Initialize current prices with base values
 	for drug_name in base_drug_prices:
@@ -166,5 +166,5 @@ func reset_prices():
 # Get current location
 func get_current_location():
 	if main_game and is_instance_valid(main_game) and main_game.has_node("LocationSystem"):
-		return main_game.get_node("LocationSystem").current_location
+		return main_game.get_node("Scripts/LocationSystem").current_location
 	return ""

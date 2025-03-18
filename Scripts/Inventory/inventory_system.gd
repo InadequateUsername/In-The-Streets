@@ -28,7 +28,7 @@ var cancel_button
 
 func _ready():
 	# Get reference to main game
-	main_game = get_parent()
+	main_game = get_node("/root/Control")
 	
 	# Get UI references
 	inventory_list = main_game.get_node("MainContainer/BottomSection/InventoryContainer/InventoryList")
@@ -104,7 +104,7 @@ func setup_quantity_dialog():
 	# Create dialog
 	quantity_dialog = PopupPanel.new()
 	quantity_dialog.title = "Select Quantity"
-	main_game.add_child(quantity_dialog)
+	main_game.call_deferred("add_child", quantity_dialog)
 	
 	# Create container
 	var vbox = VBoxContainer.new()
@@ -209,7 +209,7 @@ func sell_drugs():
 	var quantity = int(selected_item[1])
 	
 	# Get the current market price from MarketSystem instead of inventory
-	var price = main_game.get_node("MarketSystem").get_drug_price(drug_name)
+	var price = main_game.get_node("Scripts/MarketSystem").get_drug_price(drug_name)
 	
 	if quantity <= 0:
 		main_game.show_message("You don't have any " + drug_name + " to sell")

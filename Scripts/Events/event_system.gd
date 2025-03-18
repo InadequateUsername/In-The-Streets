@@ -228,7 +228,7 @@ func add_random_drugs(game_controller, amount):
 
 # Helper function to modify specific drug price
 func modify_specific_drug_price(game_controller, drug_name, price_modifier):
-	game_controller.get_node("MarketSystem").apply_drug_modifier(drug_name, price_modifier)
+	game_controller.get_node("Scripts/MarketSystem").apply_drug_modifier(drug_name, price_modifier)
 	game_controller.update_market_display()
 
 # Helper function to modify all market prices
@@ -238,7 +238,7 @@ func modify_market_prices(game_controller, modifier):
 		var base_price = game_controller.get_base_drug_prices()[drug_name]
 		game_controller.set_drug_price(drug_name, int(base_price * modifier))
 	
-	game_controller.get_node("MarketSystem").apply_market_modifier(modifier)
+	game_controller.get_node("Scripts/MarketSystem").apply_market_modifier(modifier)
 	game_controller.update_market_display()
 
 # Display event in UI and apply effects

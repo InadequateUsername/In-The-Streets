@@ -39,10 +39,10 @@ func _ready():
 	await get_tree().process_frame
 	
 	# Store references to important nodes
-	buy_button = get_node_or_null("/root/Control/MainContainer/BottomSection/ActionButtons/BuyButton")
-	sell_button = get_node_or_null("/root/Control/MainContainer/BottomSection/ActionButtons/SellButton")
-	market_list = get_node_or_null("/root/Control/MainContainer/BottomSection/MarketContainer/MarketList")
-	inventory_list = get_node_or_null("/root/Control/MainContainer/BottomSection/InventoryContainer/InventoryList")
+	buy_button = get_node_or_null("MainContainer/BottomSection/ActionButtons/BuyButton")
+	sell_button = get_node_or_null("MainContainer/BottomSection/ActionButtons/SellButton")
+	market_list = get_node_or_null("MainContainer/BottomSection/MarketContainer/MarketList")
+	inventory_list = get_node_or_null("MainContainer/BottomSection/InventoryContainer/InventoryList")
 	
 	# Add all buttons to the "buttons" group
 	var all_buttons = []
@@ -222,7 +222,7 @@ func style_event_container():
 
 func style_panels():
 	# Main background panel
-	var main_panel = get_node_or_null("/root/Control/MainContainer")
+	var main_panel = get_node_or_null("MainContainer")
 	if not main_panel:
 		push_warning("Could not find MainContainer")
 		return
@@ -234,21 +234,21 @@ func style_panels():
 	main_panel.add_theme_stylebox_override("panel", panel_style)
 	
 	# Top section panel
-	var top_section = get_node_or_null("/root/Control/MainContainer/TopSection")
+	var top_section = get_node_or_null("MainContainer/TopSection")
 	if top_section:
 		var top_style = StyleBoxFlat.new()
 		top_style.bg_color = DARK_BG_COLOR
 		top_section.add_theme_stylebox_override("panel", top_style)
 	
 	# Bottom section panel
-	var bottom_section = get_node_or_null("/root/Control/MainContainer/BottomSection")
+	var bottom_section = get_node_or_null("MainContainer/BottomSection")
 	if bottom_section:
 		var bottom_style = StyleBoxFlat.new()
 		bottom_style.bg_color = DARK_BG_COLOR
 		bottom_section.add_theme_stylebox_override("panel", bottom_style)
 	
 	# Location container
-	var location_container = get_node_or_null("/root/Control/MainContainer/TopSection/LocationContainer")
+	var location_container = get_node_or_null("MainContainer/TopSection/LocationContainer")
 	if location_container:
 		var location_style = StyleBoxFlat.new()
 		location_style.bg_color = DARKER_BG_COLOR
@@ -272,9 +272,9 @@ func find_all_labels(node, label_list):
 
 func style_stats_panels():
 	# Apply styling to stats panels (Cash, Bank, Debt, Guns)
-	style_stat_panel("/root/Control/MainContainer/TopSection/StatsContainer/CashRow", CASH_COLOR)
-	style_stat_panel("/root/Control/MainContainer/TopSection/StatsContainer/DebtRow", DEBT_COLOR)
-	style_stat_panel("/root/Control/MainContainer/TopSection/StatsContainer/GunsRow", GUNS_COLOR)
+	style_stat_panel("MainContainer/TopSection/StatsContainer/CashRow", CASH_COLOR)
+	style_stat_panel("MainContainer/TopSection/StatsContainer/DebtRow", DEBT_COLOR)
+	style_stat_panel("MainContainer/TopSection/StatsContainer/GunsRow", GUNS_COLOR)
 
 func style_stat_panel(node_path, text_color):
 	var panel = get_node_or_null(node_path)
@@ -373,8 +373,8 @@ func style_buttons():
 
 func style_tables():
 	# Style the market and inventory lists
-	style_list("/root/Control/MainContainer/BottomSection/MarketContainer/MarketList")
-	style_list("/root/Control/MainContainer/BottomSection/InventoryContainer/InventoryList")
+	style_list("MainContainer/BottomSection/MarketContainer/MarketList")
+	style_list("MainContainer/BottomSection/InventoryContainer/InventoryList")
 
 func style_list(node_path):
 	var list = get_node_or_null(node_path)
@@ -404,7 +404,7 @@ func style_list(node_path):
 	
 func style_progress_bars():
 	# Style health bar
-	var health_bar = get_node_or_null("/root/Control/MainContainer/TopSection/StatsContainer/HealthContainer/HealthRow/HealthBar")
+	var health_bar = get_node_or_null("MainContainer/TopSection/StatsContainer/HealthContainer/HealthRow/HealthBar")
 	if not health_bar:
 		push_warning("Could not find HealthBar")
 		return
